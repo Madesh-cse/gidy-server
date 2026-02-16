@@ -1,8 +1,6 @@
 
 
-```md
 # 🚀 Gidy.ai – Server (Backend)
-```
 
 
 Backend API for Gidy.ai Profile Management Platform built using Node.js, Express, TypeScript, and MongoDB.
