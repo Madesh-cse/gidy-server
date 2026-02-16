@@ -4,20 +4,39 @@ import profileSchemaData from "../model/profile.model";
 export const createProfile = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { firstName, lastName, email, bio } = req.body;
 
+    // Basic validation
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "First name, last name and email are required",
+      });
+    }
+
+    // Prevent duplicate profile by email
+    const existingProfile = await profileSchemaData.findOne({ email });
+
+    if (existingProfile) {
+      return res.status(409).json({
+        success: false,
+        message: "Profile already exists with this email",
+      });
+    }
+
+    //  Handle file uploads safely
     const files = req.files as {
       [fieldname: string]: Express.Multer.File[];
     };
 
-    const profileImage = files?.profileImage
+    const profileImage = files?.profileImage?.[0]?.filename
       ? `/uploads/${files.profileImage[0].filename}`
       : null;
 
-    const resume = files?.resume
+    const resume = files?.resume?.[0]?.filename
       ? `/uploads/${files.resume[0].filename}`
       : null;
 
@@ -25,7 +44,7 @@ export const createProfile = async (
       firstName,
       lastName,
       email,
-      bio,
+      bio: bio || "",
       profileImage,
       resume,
     });
@@ -45,16 +64,13 @@ export const createProfile = async (
 export const getProfile = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const profile = await profileSchemaData.findOne().sort({ createdAt: -1 });
 
     if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: "No profile found",
-      });
+      return res.status(200).json(profile || null);
     }
 
     return res.status(200).json({
@@ -70,7 +86,7 @@ export const getProfile = async (
 export const updateProfile = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { firstName, lastName, email, bio } = req.body;
@@ -97,7 +113,7 @@ export const updateProfile = async (
     const updatedProfile = await profileSchemaData.findOneAndUpdate(
       {},
       updateData,
-      { new: true }
+      { new: true },
     );
 
     return res.status(200).json({
@@ -109,5 +125,3 @@ export const updateProfile = async (
     next(error);
   }
 };
-
-

@@ -40,7 +40,8 @@ export const getCertificates = async ( req: Request,res: Response) => {
     const certificates = await CertificationData.find().sort({ createdAt: -1,});
     res.status(200).json({
       success: true,
-      certificates,
+      count: certificates.length,
+      data: certificates,
     });
 
   } catch (err: any) {
